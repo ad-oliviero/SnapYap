@@ -5,8 +5,8 @@
 //  Created by Elizbar Kheladze on 08/12/25.
 //
 
-import SwiftData
 import Foundation
+import SwiftData
 
 @Model
 final class Item {

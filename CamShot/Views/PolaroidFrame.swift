@@ -5,6 +5,8 @@
 //  Created by Elizbar Kheladze on 08/12/25.
 //
 
+import Accelerate
+import AVKit
 import SwiftUI
 
 struct PolaroidFrame: View {
@@ -16,7 +18,7 @@ struct PolaroidFrame: View {
     var isCompact: Bool = false
     
     @StateObject private var audioManager = AudioManager()
-    @State private var waveformHeights: [CGFloat] = (0..<40).map { _ in CGFloat.random(in: 0.3...1.0) }
+    @State private var samples: [Float] = []
     
     var body: some View {
         VStack(spacing: 0) {
@@ -51,28 +53,21 @@ struct PolaroidFrame: View {
                         }
                         
                         GeometryReader { geometry in
-                            let displayBars = isCompact ? Array(waveformHeights.prefix(15)) : waveformHeights
-                            let totalBars = displayBars.count
-                            let spacing: CGFloat = 2
-                            let availableWidth = geometry.size.width - (CGFloat(totalBars) * spacing)
-                            let barWidth = max(2, availableWidth / CGFloat(totalBars))
-                            
-                            HStack(spacing: spacing) {
-                                ForEach(0..<totalBars, id: \.self) { index in
-                                    RoundedRectangle(cornerRadius: 2)
-                                        .fill(barColor(for: index, total: totalBars))
-                                        .frame(height: (isCompact ? 16 : 24) * displayBars[index])
-                                        .frame(width: barWidth)
-                                        .animation(.easeInOut(duration: 0.1), value: audioManager.currentTime)
+                            HStack(alignment: .center, spacing: 2) {
+                                ForEach(Array(samples.enumerated()), id: \.offset) { index, sample in
+                                    RoundedRectangle(cornerRadius: 1)
+                                        .fill(barColor(for: index, total: samples.count))
+                                        .frame(width: 2, height: max(CGFloat(sample) * geometry.size.height, 2))
                                 }
                             }
-                            .frame(height: isCompact ? 20 : 30)
-                            .frame(maxHeight: .infinity)
+                            .frame(height: geometry.size.height)
+                            .task(id: geometry.size.width) {
+                                await loadAudioSamples(from: data, width: geometry.size.width)
+                            }
                         }
                     }
                     .padding(.horizontal, isCompact ? 8 : 20)
-                }
-                else if !showAudioControls, audioData != nil {
+                } else if !showAudioControls, audioData != nil {
                     HStack {
                         Spacer()
                         Image(systemName: "waveform")
@@ -103,5 +98,29 @@ struct PolaroidFrame: View {
         let thresholdIndex = Int(progress * Double(total))
         
         return index <= thresholdIndex ? Color.black : Color.gray.opacity(0.3)
+    }
+
+    private func loadAudioSamples(from data: Data, width: CGFloat) async {
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".m4a")
+        do {
+            try data.write(to: tempURL)
+            let asset = AVURLAsset(url: tempURL)
+            
+            guard let audioInfo = try SignalProcessingHelper.samples(asset) else { return }
+            
+            let spacing: CGFloat = 2
+            let barWidth: CGFloat = 2
+            let count = Int(width / (barWidth + spacing))
+            
+            let newSamples = try await SignalProcessingHelper.downsample(audioInfo.samples, count: count)
+            
+            await MainActor.run {
+                self.samples = newSamples
+            }
+            
+            try? FileManager.default.removeItem(at: tempURL)
+        } catch {
+            print("Error loading samples: \(error)")
+        }
     }
 }
