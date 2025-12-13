@@ -5,8 +5,8 @@
 //  Created by Elizbar Kheladze on 08/12/25.
 //
 
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct ItemDetailView: View {
     @Query(sort: \Item.timestamp, order: .reverse) private var items: [Item]
@@ -47,7 +47,6 @@ struct ItemDetailView: View {
                     ScrollViewReader { proxy in
                         ScrollView(.horizontal, showsIndicators: false) {
                             LazyHStack(spacing: thumbnailSpacing) {
-                                
                                 Spacer()
                                     .frame(width: geo.size.width / 2 - thumbnailSize / 2 - thumbnailSpacing)
                                 

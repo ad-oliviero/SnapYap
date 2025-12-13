@@ -5,8 +5,8 @@
 //  Created by Elizbar Kheladze on 08/12/25.
 //
 
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct CaptureFlowView: View {
     @Environment(\.modelContext) private var modelContext
@@ -110,7 +110,6 @@ struct CaptureFlowView: View {
         
         let newItem = Item(imageData: imageData, audioData: audioData)
         modelContext.insert(newItem)
-        
         
 //        UIImageWriteToSavedPhotosAlbum(UIImage(data: imageData)!, nil, nil, nil)
         
