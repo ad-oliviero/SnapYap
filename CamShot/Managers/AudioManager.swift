@@ -12,12 +12,17 @@ import Foundation
 class AudioManager: NSObject, ObservableObject, AVAudioRecorderDelegate, AVAudioPlayerDelegate {
     @Published var isRecording = false
     @Published var isPlaying = false
+    
     @Published var duration: TimeInterval = 0.0
     @Published var currentTime: TimeInterval = 0.0
     
     private var audioRecorder: AVAudioRecorder?
     private var audioPlayer: AVAudioPlayer?
     private var timer: Timer?
+    
+    let recordingLimit: TimeInterval = 30.0
+    
+    var onRecordingFinished: ((Data?) -> Void)?
     
     override init() {
         super.init()
@@ -32,7 +37,7 @@ class AudioManager: NSObject, ObservableObject, AVAudioRecorderDelegate, AVAudio
     private func setupSession() {
         do {
             let session = AVAudioSession.sharedInstance()
-            try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker])
+            try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
             try session.setActive(true)
         } catch {
             print(error.localizedDescription)
@@ -40,6 +45,9 @@ class AudioManager: NSObject, ObservableObject, AVAudioRecorderDelegate, AVAudio
     }
     
     func startRecording() {
+        currentTime = 0.0
+        duration = 0.0
+        
         let fileName = FileManager.default.temporaryDirectory.appendingPathComponent("temp_recording.m4a")
         let settings: [String: Any] = [
             AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
@@ -53,19 +61,24 @@ class AudioManager: NSObject, ObservableObject, AVAudioRecorderDelegate, AVAudio
             audioRecorder?.delegate = self
             audioRecorder?.record()
             isRecording = true
+            startTimer()
         } catch {
             print(error.localizedDescription)
         }
     }
     
+    @discardableResult
     func stopRecording() -> Data? {
         audioRecorder?.stop()
         isRecording = false
+        stopTimer()
         audioRecorder = nil
         
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("temp_recording.m4a")
         return try? Data(contentsOf: url)
     }
+    
+    // MARK:  Playback
     
     func startPlayback(data: Data) {
         stopPlayback()
@@ -73,7 +86,9 @@ class AudioManager: NSObject, ObservableObject, AVAudioRecorderDelegate, AVAudio
         do {
             audioPlayer = try AVAudioPlayer(data: data)
             audioPlayer?.delegate = self
+            
             duration = audioPlayer?.duration ?? 0.0
+            
             audioPlayer?.play()
             isPlaying = true
             startTimer()
@@ -88,21 +103,35 @@ class AudioManager: NSObject, ObservableObject, AVAudioRecorderDelegate, AVAudio
         stopTimer()
     }
     
+    // MARK:  Timer Logic
+    
     private func startTimer() {
-        timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+        timer?.invalidate()
+        
+        timer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] _ in
             guard let self = self else { return }
-            self.currentTime = self.audioPlayer?.currentTime ?? 0.0
+            
+            if self.isRecording {
+                self.currentTime = self.audioRecorder?.currentTime ?? 0.0
+                
+                if self.currentTime >= self.recordingLimit {
+                    let data = self.stopRecording()
+                    self.onRecordingFinished?(data)
+                }
+            } else if self.isPlaying {
+                self.currentTime = self.audioPlayer?.currentTime ?? 0.0
+            }
         }
     }
     
     private func stopTimer() {
         timer?.invalidate()
         timer = nil
-        currentTime = 0.0
     }
     
     func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
         isPlaying = false
         stopTimer()
+        currentTime = 0.0
     }
 }

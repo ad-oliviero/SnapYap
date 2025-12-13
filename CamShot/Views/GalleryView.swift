@@ -18,36 +18,74 @@ struct GalleryView: View {
         GridItem(.flexible(), spacing: 16)
     ]
 
+    struct MonthSection: Identifiable {
+        let id = UUID()
+        let title: String
+        let items: [Item]
+    }
+
+    var groupedItems: [MonthSection] {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMMM yyyy"
+        
+        let grouped = Dictionary(grouping: items) { item in
+            formatter.string(from: item.timestamp)
+        }
+        
+        return grouped.map { (key, value) in
+            MonthSection(title: key, items: value)
+        }.sorted { section1, section2 in
+            guard let first1 = section1.items.first, let first2 = section2.items.first else { return false }
+            return first1.timestamp > first2.timestamp
+        }
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
-                LazyVGrid(columns: columns, spacing: 16) {
-                    ForEach(items) { item in
-                        NavigationLink(destination: ItemDetailView(selectedID: item.id)) {
-                            if let uiImage = UIImage(data: item.imageData) {
-                                PolaroidFrame(
-                                    image: uiImage,
-                                    audioData: item.audioData,
-                                    blurAmount: 0,
-                                    showAudioControls: true,
-                                    enableShadow: true,
-                                    isCompact: true
-                                )
+                LazyVStack(alignment: .leading, spacing: 20) {
+                    
+                    ForEach(groupedItems) { section in
+                        VStack(alignment: .leading, spacing: 10) {
+
+                            Text(section.title)
+                                .font(.title3)
+                                .fontWeight(.bold)
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 16)
+                                .padding(.top, 10)
+
+                            LazyVGrid(columns: columns, spacing: 16) {
+                                ForEach(section.items) { item in
+                                    NavigationLink(destination: ItemDetailView(selectedID: item.id)) {
+                                        if let uiImage = UIImage(data: item.imageData) {
+                                            PolaroidFrame(
+                                                image: uiImage,
+                                                audioData: item.audioData,
+                                                blurAmount: 0,
+                                                showAudioControls: true,
+                                                enableShadow: true,
+                                                isCompact: true
+                                            )
+                                        }
+                                    }
+                                    .buttonStyle(PlainButtonStyle())
+                                    .contextMenu {
+                                        Button(role: .destructive) {
+                                            deleteItem(item)
+                                        } label: {
+                                            Label("Delete", systemImage: "trash")
+                                        }
+                                    }
+                                }
                             }
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                        .contextMenu {
-                            Button(role: .destructive) {
-                                deleteItem(item)
-                            } label: {
-                                Label("Delete", systemImage: "trash")
-                            }
+                            .padding(.horizontal, 16)
                         }
                     }
                 }
-                .padding(16)
+                .padding(.bottom, 20)
             }
-            .background(Color.black)
+            .background(Color(red: 231/255, green: 111/255, blue: 95/255))
             .navigationTitle("Gallery")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarColorScheme(.dark, for: .navigationBar)

@@ -92,13 +92,16 @@ struct PolaroidFrame: View {
     }
     
     private func barColor(for index: Int, total: Int) -> Color {
-        guard audioManager.duration > 0 else { return Color.gray.opacity(0.3) }
-        
-        let progress = audioManager.currentTime / audioManager.duration
-        let thresholdIndex = Int(progress * Double(total))
-        
-        return index <= thresholdIndex ? Color.black : Color.gray.opacity(0.3)
-    }
+            let duration = Double(audioManager.duration)
+            let currentTime = Double(audioManager.currentTime)
+            
+            guard duration > 0.0 else { return Color.gray.opacity(0.3) }
+            
+            let progress = currentTime / duration
+            let thresholdIndex = Int(progress * Double(total))
+            
+            return index <= thresholdIndex ? Color.black : Color.gray.opacity(0.3)
+        }
 
     private func loadAudioSamples(from data: Data, width: CGFloat) async {
         let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".m4a")

@@ -11,11 +11,17 @@ import SwiftUI
 struct CaptureFlowView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    
     @State private var capturedImage: UIImage?
     @State private var showCamera = true
     @State private var isRecording = false
     @State private var currentBlur: CGFloat = 30.0
+    
     @StateObject private var audioManager = AudioManager()
+    
+    private var canStopRecording: Bool {
+        return audioManager.currentTime >= 8.0
+    }
     
     var body: some View {
         VStack {
@@ -33,40 +39,49 @@ struct CaptureFlowView: View {
                 Spacer()
                 
                 VStack(spacing: 24) {
-                    if !isRecording {
-                        Text("Hold to Record & Reveal")
-                            .font(.callout)
-                            .foregroundColor(.gray)
+                    
+                    if isRecording {
+                        Text("\(String(format: "%.1f", audioManager.currentTime)) / 30.0")
+                            .font(.system(size: 24, weight: .bold, design: .monospaced))
+                            .foregroundColor(.white)
                             .transition(.opacity)
                     } else {
-                        Text("Revealing...")
+                        Text("Hold to Record & Reveal")
                             .font(.callout)
-                            .fontWeight(.medium)
-                            .foregroundColor(.red)
+                            .foregroundColor(.white.opacity(0.8))
                             .transition(.opacity)
                     }
                     
                     Button {
-                        if isRecording {
-                            finishRecordingAndSave()
-                        } else {
+                        if !isRecording {
                             startRecordingProcess()
+                        } else {
+                            if canStopRecording {
+                                let data = audioManager.stopRecording()
+                                finishRecordingAndSave(audioData: data)
+                            }
                         }
                     } label: {
                         ZStack {
                             Circle()
-                                .strokeBorder(isRecording ? Color.red : Color.black, lineWidth: 3)
+                                .strokeBorder(isRecording ? Color.white : Color.black, lineWidth: 3)
                                 .frame(width: 74, height: 74)
                             
                             Circle()
-                                .fill(isRecording ? Color.red : Color.black)
+                                .fill(isRecording ? (canStopRecording ? Color.red : Color.gray) : Color.black)
                                 .frame(width: 64, height: 64)
                                 .overlay(
                                     Group {
                                         if isRecording {
-                                            RoundedRectangle(cornerRadius: 4)
-                                                .fill(Color.white)
-                                                .frame(width: 28, height: 28)
+                                            if canStopRecording {
+                                                RoundedRectangle(cornerRadius: 4)
+                                                    .fill(Color.white)
+                                                    .frame(width: 28, height: 28)
+                                            } else {
+                                                Image(systemName: "lock.fill")
+                                                    .foregroundColor(.white)
+                                                    .font(.title2)
+                                            }
                                         } else {
                                             Image(systemName: "mic.fill")
                                                 .foregroundColor(.white)
@@ -76,19 +91,26 @@ struct CaptureFlowView: View {
                                 )
                         }
                     }
+                    .disabled(isRecording && !canStopRecording)
+                    .animation(.easeInOut, value: canStopRecording)
                 }
                 .padding(.bottom, 50)
             } else {
-                Color.black.ignoresSafeArea()
+                Color(red: 231/255, green: 111/255, blue: 95/255).ignoresSafeArea()
             }
         }
-        .background(Color(white: 0.95))
+        .background(Color(red: 231/255, green: 111/255, blue: 95/255))
         .fullScreenCover(isPresented: $showCamera) {
             CameraView(image: $capturedImage)
         }
-        .onChange(of: capturedImage) { _, newValue in
-            if newValue == nil {
+        .onChange(of: showCamera) { _, isOpen in
+            if !isOpen && capturedImage == nil {
                 dismiss()
+            }
+        }
+        .onAppear {
+            audioManager.onRecordingFinished = { audioData in
+                finishRecordingAndSave(audioData: audioData)
             }
         }
     }
@@ -102,17 +124,15 @@ struct CaptureFlowView: View {
         }
     }
     
-    private func finishRecordingAndSave() {
-        guard let imageData = capturedImage?.jpegData(compressionQuality: 0.8),
-              let audioData = audioManager.stopRecording() else { return }
-        
-        isRecording = false
+    private func finishRecordingAndSave(audioData: Data?) {
+        guard let image = capturedImage,
+              let audioData = audioData,
+              let imageData = image.jpegData(compressionQuality: 0.8) else { return }
         
         let newItem = Item(imageData: imageData, audioData: audioData)
         modelContext.insert(newItem)
         
-//        UIImageWriteToSavedPhotosAlbum(UIImage(data: imageData)!, nil, nil, nil)
-        
+        isRecording = false
         dismiss()
     }
 }
