@@ -83,9 +83,6 @@ struct CaptureFlowView: View {
             }
         }
         .background(Color(white: 0.95))
-        .fullScreenCover(isPresented: $showCamera) {
-            CameraView(image: $capturedImage)
-        }
         .onChange(of: capturedImage) { _, newValue in
             if newValue == nil {
                 dismiss()
@@ -110,8 +107,6 @@ struct CaptureFlowView: View {
         
         let newItem = Item(imageData: imageData, audioData: audioData)
         modelContext.insert(newItem)
-        
-//        UIImageWriteToSavedPhotosAlbum(UIImage(data: imageData)!, nil, nil, nil)
         
         dismiss()
     }

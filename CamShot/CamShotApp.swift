@@ -25,7 +25,8 @@ struct CamShotApp: App {
 
     var body: some Scene {
         WindowGroup {
-            GalleryView()
+//            GalleryView()
+            CameraView()
         }
         .modelContainer(sharedModelContainer)
     }

@@ -50,21 +50,6 @@ struct GalleryView: View {
             .background(Color.black)
             .navigationTitle("Gallery")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarColorScheme(.dark, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        showCapture = true
-                    } label: {
-                        Image(systemName: "camera.fill")
-                            .foregroundColor(.white)
-                    }
-                }
-            }
-            .fullScreenCover(isPresented: $showCapture) {
-                CaptureFlowView()
-            }
         }
     }
 
