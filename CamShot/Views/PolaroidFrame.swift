@@ -92,12 +92,39 @@ struct PolaroidFrame: View {
     }
     
     private func barColor(for index: Int, total: Int) -> Color {
-        guard audioManager.duration > 0 else { return Color.gray.opacity(0.3) }
-        
-        let progress = audioManager.currentTime / audioManager.duration
-        let thresholdIndex = Int(progress * Double(total))
-        
-        return index <= thresholdIndex ? Color.black : Color.gray.opacity(0.3)
+            let duration = Double(audioManager.duration)
+            let currentTime = Double(audioManager.currentTime)
+            
+            guard duration > 0.0 else { return Color.gray.opacity(0.3) }
+            
+            let progress = currentTime / duration
+            let thresholdIndex = Int(progress * Double(total))
+            
+            return index <= thresholdIndex ? Color.black : Color.gray.opacity(0.3)
+        }
+
+    private func loadAudioSamples(from data: Data, width: CGFloat) async {
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".m4a")
+        do {
+            try data.write(to: tempURL)
+            let asset = AVURLAsset(url: tempURL)
+            
+            guard let audioInfo = try SignalProcessingHelper.samples(asset) else { return }
+            
+            let spacing: CGFloat = 2
+            let barWidth: CGFloat = 2
+            let count = Int(width / (barWidth + spacing))
+            
+            let newSamples = try await SignalProcessingHelper.downsample(audioInfo.samples, count: count)
+            
+            await MainActor.run {
+                self.samples = newSamples
+            }
+            
+            try? FileManager.default.removeItem(at: tempURL)
+        } catch {
+            print("Error loading samples: \(error)")
+        }
     }
 
     private func loadAudioSamples(from data: Data, width: CGFloat) async {

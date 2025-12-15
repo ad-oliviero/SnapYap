@@ -17,7 +17,7 @@ struct ItemDetailView: View {
     
     var body: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
+            Color.main.ignoresSafeArea()
             
             VStack(spacing: 0) {
                 Spacer()
