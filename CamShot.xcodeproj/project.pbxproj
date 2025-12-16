@@ -10,9 +10,22 @@
 		20169A1B2EE2F58000178510 /* CamShot.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CamShot.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		20DE025A2EF15C6500980DC5 /* Exceptions for "CamShot" folder in "CamShot" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 20169A1A2EE2F58000178510 /* CamShot */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		20169A1D2EE2F58000178510 /* CamShot */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				20DE025A2EF15C6500980DC5 /* Exceptions for "CamShot" folder in "CamShot" target */,
+			);
 			path = CamShot;
 			sourceTree = "<group>";
 		};
@@ -253,10 +266,12 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = R2WDS6ZMQ6;
+				DEVELOPMENT_TEAM = L923V73973;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CamShot/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "We need camera access to take photos";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "";
@@ -290,10 +305,12 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = R2WDS6ZMQ6;
+				DEVELOPMENT_TEAM = L923V73973;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CamShot/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "We need camera access to take photos";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "";
