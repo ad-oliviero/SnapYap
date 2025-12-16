@@ -30,6 +30,7 @@ struct PolaroidFrame: View {
                     .blur(radius: blurAmount)
                     .clipped()
                     .overlay(Color.black.opacity(blurAmount > 0 ? 0.1 : 0))
+                    
             }
             .aspectRatio(1.0, contentMode: .fit)
             .background(Color(white: 0.9))
@@ -89,6 +90,7 @@ struct PolaroidFrame: View {
         .onDisappear {
             audioManager.stopPlayback()
         }
+        .clipShape(RoundedRectangle(cornerRadius: 10))
     }
     
     private func barColor(for index: Int, total: Int) -> Color {

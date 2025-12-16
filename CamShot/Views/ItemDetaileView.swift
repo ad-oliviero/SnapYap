@@ -15,6 +15,16 @@ struct ItemDetailView: View {
     let thumbnailSize: CGFloat = 40
     let thumbnailSpacing: CGFloat = 8
     
+    private static let dateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = .current
+        f.setLocalizedDateFormatFromTemplate("EEE d MMM, HH:mm")
+        return f
+    }()
+    
+    // Track which card is flipped (by item id)
+    @State private var flippedIDs: Set<UUID> = []
+    
     var body: some View {
         ZStack {
             Color.main.ignoresSafeArea()
@@ -27,15 +37,55 @@ struct ItemDetailView: View {
                         if let uiImage = UIImage(data: item.imageData) {
                             VStack {
                                 Spacer()
-                                PolaroidFrame(
-                                    image: uiImage,
-                                    audioData: item.audioData,
-                                    blurAmount: 0,
-                                    showAudioControls: true,
-                                    enableShadow: false
+                                
+                                // Flip card wrapper
+                                FlipCard(
+                                    isFlipped: Binding(
+                                        get: { flippedIDs.contains(item.id) },
+                                        set: { newValue in
+                                            if newValue {
+                                                flippedIDs.insert(item.id)
+                                            } else {
+                                                flippedIDs.remove(item.id)
+                                            }
+                                        }
+                                    ),
+                                    front: {
+                                        PolaroidFrame(
+                                            image: uiImage,
+                                            audioData: item.audioData,
+                                            blurAmount: 0,
+                                            showAudioControls: true,
+                                            enableShadow: false
+                                        )
+                                    },
+                                    back: {
+                                        ZStack {
+                                            Text(Self.dateFormatter.string(from: item.timestamp))
+                                                .font(.system(size: 28, weight: .bold))
+                                                .foregroundColor(.black)
+                                                .padding(.leading, 20)
+                                                .padding(.bottom, 12)
+                                            
+                                            .tag(item.id)
+                                            PolaroidFrame(
+                                                image: uiImage,
+                                                audioData: item.audioData,
+                                                blurAmount: 0,
+                                                showAudioControls: true,
+                                                enableShadow: false
+                                            ).scaleEffect(x: -1)
+                                                .opacity(0.1)
+                                                .overlay {
+                                                    Color.white
+                                                }.opacity(0.6)
+                                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                                        }
+                                    }
+                                    
                                 )
-                                Text("\(item.timestamp)")
                                 .padding(.horizontal, 20)
+                                
                                 Spacer()
                             }
                             .tag(item.id)
@@ -91,5 +141,83 @@ struct ItemDetailView: View {
         }
         .toolbarColorScheme(.dark, for: .navigationBar)
         .toolbarBackground(.hidden, for: .navigationBar)
+    }
+}
+
+// MARK: - FlipCard inline view
+private struct FlipCard<Front: View, Back: View>: View {
+    @Binding var isFlipped: Bool
+    let front: Front
+    let back: Back
+    
+    // Animation state
+    @State private var rotation: Double = 0
+    @GestureState private var pressing: Bool = false
+    
+    init(
+        isFlipped: Binding<Bool>,
+        @ViewBuilder front: () -> Front,
+        @ViewBuilder back: () -> Back
+    ) {
+        self._isFlipped = isFlipped
+        self.front = front()
+        self.back = back()
+    }
+    
+    var body: some View {
+        ZStack {
+            // Front (only the card flips)
+            front
+                .opacity(isFrontVisible ? 1 : 0)
+                .accessibilityHidden(!isFrontVisible)
+                .rotation3DEffect(.degrees(rotation), axis: (x: 0, y: 1, z: 0), perspective: 0.6)
+                .animation(.easeInOut(duration: 0.35), value: rotation)
+            
+            // Back (same)
+            ZStack {
+                back
+            }
+            .opacity(isFrontVisible ? 0 : 1)
+            .accessibilityHidden(isFrontVisible)
+            .rotation3DEffect(.degrees(rotation + 180), axis: (x: 0, y: 1, z: 0), perspective: 0.6)
+            .animation(.easeInOut(duration: 0.35), value: rotation)
+        }
+        .modifier(FlipShadow(isFlipped: isFlipped))
+        .onChange(of: isFlipped) { _, newValue in
+            withAnimation(.easeInOut(duration: 0.35)) {
+                rotation = newValue ? 180 : 0
+            }
+        }
+        .onAppear {
+            rotation = isFlipped ? 180 : 0
+        }
+        .simultaneousGesture(
+            LongPressGesture(minimumDuration: 0.25)
+                .updating($pressing) { value, state, _ in
+                    state = value
+                }
+                .onEnded { _ in
+                    let generator = UIImpactFeedbackGenerator(style: .rigid)
+                    generator.impactOccurred()
+                    withAnimation(.easeInOut(duration: 0.35)) {
+                        isFlipped.toggle()
+                    }
+                }
+        )
+        .scaleEffect(pressing ? 0.98 : 1.0)
+        .animation(.spring(response: 0.25, dampingFraction: 0.8), value: pressing)
+    }
+    
+    private var isFrontVisible: Bool {
+        rotation < 90
+    }
+}
+
+// Subtle shadow that swaps sides while flipping
+private struct FlipShadow: ViewModifier {
+    let isFlipped: Bool
+    func body(content: Content) -> some View {
+        content
+            .shadow(color: .black.opacity(0.18), radius: 12, x: isFlipped ? -4 : 4, y: 8)
     }
 }
