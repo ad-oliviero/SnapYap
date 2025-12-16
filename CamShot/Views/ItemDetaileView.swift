@@ -105,7 +105,7 @@ struct ItemDetailView: View {
                         ScrollView(.horizontal, showsIndicators: false) {
                             LazyHStack(spacing: thumbnailSpacing) {
                                 Spacer()
-                                    .frame(width: geo.size.width / 2 - thumbnailSize / 2 - thumbnailSpacing)
+                                    .frame(width: max(0, geo.size.width / 2 - thumbnailSize / 2 - thumbnailSpacing))
                                 
                                 ForEach(items) { item in
                                     if let uiImage = UIImage(data: item.imageData) {
@@ -127,7 +127,7 @@ struct ItemDetailView: View {
                                 }
                                 
                                 Spacer()
-                                    .frame(width: geo.size.width / 2 - thumbnailSize / 2 - thumbnailSpacing)
+                                    .frame(width: max(0, geo.size.width / 2 - thumbnailSize / 2 - thumbnailSpacing))
                             }
                             .padding(.bottom, 20)
                         }

@@ -97,7 +97,7 @@ class CameraModel: NSObject, ObservableObject {
 }
 
 extension CameraModel: AVCapturePhotoCaptureDelegate {
-    func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
+    nonisolated func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
         if error != nil { return }
         guard let imageData = photo.fileDataRepresentation(),
               let uiImage = UIImage(data: imageData) else { return }

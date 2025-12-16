@@ -145,7 +145,7 @@ struct CaptureFlowView: View {
                 }
             }
         }
-        .onChange(of: camera.capturedImage) { newImage in
+        .onChange(of: camera.capturedImage) { _, newImage in
             if let img = newImage {
                 withAnimation(.snappy) {
                     self.capturedImage = img

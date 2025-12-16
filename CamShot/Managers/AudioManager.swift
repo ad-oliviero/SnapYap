@@ -37,7 +37,7 @@ class AudioManager: NSObject, ObservableObject, AVAudioRecorderDelegate, AVAudio
     private func setupSession() {
         do {
             let session = AVAudioSession.sharedInstance()
-            try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
+            try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetoothHFP])
             try session.setActive(true)
         } catch {
             print(error.localizedDescription)
