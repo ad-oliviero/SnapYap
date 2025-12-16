@@ -256,6 +256,7 @@
 				DEVELOPMENT_TEAM = L923V73973;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Snap Yap";
 				INFOPLIST_KEY_NSCameraUsageDescription = "We need camera access to take photos";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "We need microphone access to record audio";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "We need library access to save your photos";
@@ -292,6 +293,7 @@
 				DEVELOPMENT_TEAM = L923V73973;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Snap Yap";
 				INFOPLIST_KEY_NSCameraUsageDescription = "We need camera access to take photos";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "We need microphone access to record audio";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "We need library access to save your photos";
